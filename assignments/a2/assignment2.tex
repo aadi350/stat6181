@@ -1,0 +1,285 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Do not alter this block (unless you're familiar with LaTeX
+\documentclass{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts, fancyhdr, color, comment, graphicx, environ,minted}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\graphicspath{ {./assignment_2/} }
+\usepackage{mdframed}
+\usepackage{listings}
+\usepackage[shortlabels]{enumitem}
+\usepackage{indentfirst}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+}
+
+
+\pagestyle{fancy}
+
+
+\newenvironment{problem}[2][Problem]
+    { \begin{mdframed}[backgroundcolor=gray!20] \textbf{#1 #2} \\}
+    {  \end{mdframed}}
+
+% Define solution environment
+\newenvironment{solution}{\textbf{Solution}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Fill in the appropriate information below
+\lhead{AADIDEV SOOKNANAN - 816003022}
+\rhead{STAT6181} 
+\chead{\textbf{ASSIGNMENT \#2}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\labelenumiii}{(\roman{enumiii})}
+\begin{document}
+    
+    \textbf{Due Date: 4th October 2021}
+    
+    Instructions:
+    
+    \begin{enumerate}
+        \item Answer ALL questions in the spaces allocated.
+        \item In this assignment, you are required to show all your working. 
+        \item Your answers must be written in the spaces provided. You can adjust the spaces allocated for the answers if you need more space. You can type your answers if you wish. 
+        \item \emph{\underline{The lecturer maintains the right to call students in individually and ask them questions on the assignments.}} 
+        
+        \emph{\underline{This may result in an adjustment of the final assignment grade.}}
+        
+        \item \emph{\underline{Upload  (i) Your R code (ii) Your Data and (3) A softcopy of your assignment on myelearning as a pdf. }} 
+
+        \emph{\underline{In Dropbox 1. DO NOT SUBMIT AS A SINGLE ZIP FILE with all the documents.}}
+    \end{enumerate}
+    
+    \vspace{2cm}
+    
+    \begin{enumerate}
+        \item QUESTION 1
+        Suppose that $X_{1}, X_{2},.....,X_{n}$ are i.i.d. Poisson random variables whose distribution is a mixture of Poisson random variables with parameters $\lambda\wedge\mu$. We observe a Poisson random variable with mean $\lambda$ with probability $\theta$ and a Poisson variable with mean $\mu$ with a probability $1-\theta$.
+            \begin{enumerate}
+                \item Derive the EM Algorithm to estimate the parameters \hfill[10]
+                
+                This problem requires derivation of the EM algorithm for a mixture model of two Poisson. Suppose:
+                \begin{equation*}
+                    Y_{1}\sim Poisson(\lambda_{1})\text{ and }Y_{2}\sim Poisson(\lambda_{2})
+                \end{equation*}
+                
+                Let $w$ be a Bernoulli random variable independent of $Y_{1}$ and $Y_2$ with probability of success $\pi$. The random variable $X$ observed is therefore:
+                \begin{equation*}
+                    X = (1-W)Y_{1} + WY_{2}
+                \end{equation*}
+                
+                Let the parameter vector $\theta = (\lambda_1, \lambda_2, \pi)$. The PDF of the mixture of random variable X is:
+                \begin{equation*}
+                 \begin{gathered}
+                   f(x) = (1-\pi)f_1(x) + \pi f_2(x)\\ -\infty<x<\infty\\
+                   0\leq\pi\leq1  
+                \end{gathered}
+                \end{equation*}
+                
+                The unobserved data are r.v. identifying the distribution memberships, for $i=1,..,n$ consistitute a Bernouilli r.v.:
+                \begin{equation}
+                  w_{i} =
+                    \begin{cases}
+                      0 & \text{if $x_i$ has PDF $f_{1}(x)$}\\
+                      1 & \text{if $x_i$ has PDF $f_{2}(x)$}
+                    \end{cases}       
+                \end{equation}
+                
+                
+                The complete likelihood function is:
+                \begin{equation*}
+                    \mathcal{L}^{c}(\theta|x,w) = \prod_{w_i = 0}f_1(x_i)\prod_{w_i=1}f_2(x_i)
+                \end{equation*}
+                Hence the log- of the complete likelihood is:
+                \begin{equation*}
+                    \begin{split}
+                        l^{c}(\theta|x,w) &= \sum_{i=1}^{n}\left[(1-w_i)\log{f_1(x_i)} + w_i\log{f_2(x_i)}\right]
+                    \end{split}
+                \end{equation*}
+                
+                For the \textbf{E}-step, we need the conditional expectation of $w_i$ given $\tilde{x}, \theta_0$:
+                \begin{equation*}                    E_{\theta_0}\left[w|\theta_0,\tilde{x}\right] = P\left[w_{i}=1|\theta_0, \tilde{x}\right]
+                \end{equation*}
+                
+                In order to estimate this probability, Bayes' rule is used:
+                \begin{equation*}
+                    \gamma_i = \frac{\hat{\pi}f_{2, \theta_{0}}(x_i)}{(1-\hat{\pi})f_{1, \theta_{0}}(x_i) + \hat{\pi}f_{2, \theta_{0}}(x_i)}
+                \end{equation*}
+                
+                Replacing $w_i$ with $\gamma_i$ in the log of the complete likelihood:
+                \begin{equation*}
+                    Q(\theta|\theta_0, \tilde{x}) = \sum_{i=1}^{n}\left[(1-\gamma_i)\log{f_1(x_i)} +\gamma_i\log{f_{2}(x_i)}\right]
+                \end{equation*}
+                
+                Re-substituting $f(x) = \frac{e^{\lambda}\lambda^{x}}{x!}$ into the above:
+                \begin{equation*}
+                    \begin{split}
+                        Q(\theta|\theta_0, \tilde{x}) &= \sum_{i=1}^{n}\left[(1-\gamma_i)\log{\frac{e^{-\lambda_1}\lambda_1^{x_{i}}}{x!}} +\gamma_i\log{\frac{e^{-\lambda_2}\lambda_2^{x_{i}}}{x!}}\right]\\
+                        &= \sum_{i=1}^{n}(1-\gamma_i)\left[-\lambda_1 + x_i\log{\lambda_1} - \log{x_i!}\right] + \gamma_i\left[-\lambda_2 + x_i\log{\lambda_2} - \log{x_i!}\right]\\
+                        &= \left[-\lambda_i + x_{i}\log{\lambda_1}-\log{x_i!}\right] - \lambda_{i}\left[-\lambda_1 + x_i\log{\lambda_1}-\log{x_i!}\right] + \gamma_i\left[-\lambda_2 + x_i\log{\lambda_2}-\log{x_i!}\right]
+                    \end{split}
+                \end{equation*}
+                
+                From the above, differentiate with respect to $\lambda_i$ and set to zero:
+                \begin{equation*}
+                    \begin{split}
+                        \frac{\delta Q}{\delta\lambda_1} &= \sum_{i=1}^{n}\left[-1 + \frac{x_{i}}{\lambda_1} + \gamma_{i}\left(1 - \frac{x_i}{\lambda_1}\right)\right] = 0\\
+                        \frac{\delta Q}{\delta\lambda_2} &= \sum_{i=1}^{n}\gamma_i\left[-1 + \frac{x_{i}}{\lambda_2}\right] = 0
+                    \end{split}
+                \end{equation*} 
+                
+                Solving the above results in the following maximization equations, solving for $\lambda_1$:
+                \begin{equation*}
+                    \begin{gathered}
+                        \sum_{i=1}^{n}\left[-1 + \frac{x_i}{\lambda_1} + \gamma_i\left(1-\frac{x_i}{\lambda_1}\right)\right] = 0\\
+                        \Rightarrow \sum_{i=1}^{n}\left[\frac{1}{\lambda_1}\left(x_i - x_i\gamma_i\right) +(\gamma_i-1)\right]  = 0\\ \frac{1}{\lambda_i}\sum_{i}^{n}x_i(1-\gamma_i) = \sum_{i=1}^{n}(1-x_i)\\
+                        \therefore \lambda_1 = \frac{\sum_{i}^{n}x_i(1-\gamma_i)}{\sum_{i}^{n}(1-\gamma_i)}
+                    \end{gathered}
+                \end{equation*}
+                
+                Similarly, solving for $\lambda_2$:
+                \begin{equation*}
+                    \begin{gathered}
+                        \sum_i^{n} -\gamma_i\left[-\gamma_i + \frac{x_i}{\lambda_2}\right] = 0\\
+                        \therefore \lambda_2 = \frac{\sum_i^{n}\gamma_ix_i}{\sum_i^{n}\gamma_{i}}
+                    \end{gathered}
+                \end{equation*}
+                
+                \item Suppose the following data are observed $1, 2, 3, 8$ and $12$ perform one iteration (BY HAND!!) of the
+EM algorithm to estimate the parameters. You can use an ordinary calculator OR the calculator facilities in R. \hfill[10]
+
+
+                Using the above derived equations, the following table lists the results of the E-M algorithm for a single iteration, choosing $\theta = 0.5$, $\lambda=2$ and $\mu=8$ as the starting values.
+                Firstly solving the expectation step:
+                \begin{equation*}
+                    \gamma_i = \frac{\hat{\pi}f_{2, \lambda_{0}}(x_i)}{(1-\hat{\pi})f_{1, \mu_{0}}(x_i) + \hat{\pi}f_{2, \lambda_{0}}(x_i)}
+                \end{equation*}
+                Setting $\theta = 0.5$ and summing across all values of $x$:
+                \begin{equation*}
+                    \gamma_0 = \sum_{i}^{n}\frac{0.5f_{2, \lambda_{0}}(x_i)}{(1-0.5)f_{1, \mu_{0}}(x_i) + 0.5f_{2, \lambda_{0}}(x_i)} = 2.821
+                \end{equation*}
+                The new value for $\hat{\theta}$ is now $\frac{\gamma_{0}}{n} = \frac{2.82}{5} = 0.564$ 
+                Performing the maximization step:
+                
+                \begin{equation*}
+                    \begin{gathered}
+                        \lambda_1 = \frac{\sum_{i}^{n}x_i(1-\gamma_i)}{\sum_{i}^{n}(1-\gamma_i)} = 1.968\\
+                        \mu_1 =  \frac{\sum_i^{n}\gamma_ix_i}{\sum_i^{n}\gamma_{i}} = 9.385
+                    \end{gathered}
+                \end{equation*}
+                \item Write R code to perform the EM Algorithm and include in the R code an appropriate stopping 
+tolerance level. \hfill[10]
+
+
+                \begin{lstlisting}[language=R]
+e_step <- function(x, mean_1, mean_2, pi) {
+    return(
+        (pi * dpois(x, mean_2, log=FALSE))/
+        ((1-pi)*dpois(x, mean_1, log=FALSE) + pi*dpois(x, mean_2, log=FALSE))
+    )
+}
+
+m_step <- function(x, gamma) {
+    mean_1 = sum(x*(1-gamma))/sum(1-gamma)
+    mean_2 = sum(x*gamma)/sum(gamma)
+
+    return(c(mean_1, mean_2))
+}
+
+e_m <- function(x, mean_1_0, mean_2_0, pi_0, tol=1e-10, max_iter=1000) {
+    # specifies change of means at every iteration
+    delta <- Inf
+    # wrap both means into vector
+    means <- c(mean_1_0, mean_2_0)
+    pi <- pi_0
+    iter <- 1
+    
+    
+    while (delta > tol) {
+        # update new gamma values in expectation step
+        gamma_prev <- e_step(x, means[1], means[2], pi)
+        # use updated gamma to maximize both means in  maximization step
+        new_means <- m_step(x, gamma_prev)
+        means <- new_means
+        # update pi (proportion) 
+        pi <- sum(gamma_prev)/length(x)
+        
+        # calculate change in old and new estimates 
+        delta <- abs(new_means[1]-means[1] + new_means[2]-means[2])
+        iter <- iter + 1
+        
+        
+        # if gradients explode, return error
+        if (is.na(delta)) {
+            return("ERROR: EXPLOSION")
+        }
+        
+        # if more than max_iter or change is below tolerance, stop and return
+        if (iter >= max_iter | delta < tol) {
+            return(new_means)
+        }
+ 
+                
+    }
+    return(new_means)  
+}
+                \end{lstlisting}
+
+                \item Generate 100 values from a Poisson distribution with mean 5 and 900 values from a Poisson distribution with mean 10. Amalgamate those 1000 values into a single column. Then, run the R
+code you constructed to see how well your algorithm is able to estimate the parameters. \hfill[10]
+
+
+\begin{lstlisting}[language=R]
+# Set means for both distributions
+means <- c(5, 10)
+
+# let number of values generated be n
+n <- c(100, 900)
+
+# generate 1000 samples from distributions in one column
+x <- c(rpois(n[1], means[1]), rpois(n[2], means[2]))
+
+e_m(x, 2, 7, 0.5)
+\end{lstlisting}
+
+The output from above yielded the following results after $100$ iterations
+
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+         Parameter & Actual & Estimated\\
+         \hline
+         $\lambda_1$ &$5$&3.70047924462924\\
+         $\lambda_2$ &$10$&9.98805271043692\\
+         $\pi$ & $0.9$ & 0.939236859415711\\
+         \hline
+    \end{tabular}
+
+
+                \end{enumerate}
+        \item QUESTION 2.
+            \begin{enumerate}
+                \item 
+                        \hfill[1 mark]  
+                    
+            \end{enumerate}
+    \end{enumerate}
+    
+    % \section*{\centering }
+    % \begin{problem}{a}
+    %     (a)	
+        
+    % \end{problem}
+    % \vspace{1cm}
+    % \begin{solution}
+    
+    % \end{solution}
+
+
+\end{document}
