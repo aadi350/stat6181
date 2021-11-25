@@ -31,16 +31,17 @@ sample_indep_mh <- function(rg, dg, df, cur) {
     return(cur)
 }
 
-sample_rw_mh <- function(x) {
-
-}
-
 # defining full conditionals  
 sample_V <- function(Y, mu, v, sigma_sq, N) {
-    
-    return(rinvchisq(N, 
+    "return(rinvchisq(N, 
               v+1, 
-              sqrt(((Y-mu)^2 + sigma_sq*v)/(v+1))))
+              sqrt(((Y-mu)^2 + sigma_sq*v)/(v+1))))"
+    sample <- (1/rgamma(N,
+        0.5*(v+1),
+        0.5*((Y-mu)^2+v*sigma_sq)
+        ) # close rinvgamma
+    ) # close return
+   return(sample)
 }
 
 sample_sigma_sq <- function(v, n, V_i) {
@@ -97,7 +98,7 @@ mchain[1, 2] <- 20
 
 
 V_i <- matrix(NA, ITER_NUM, N)
-V_i[1,] <- rnorm(N, mu, 1) 
+V_i[1,] <- rnorm(N, v, 1) 
 
 v <- 30
 
@@ -109,7 +110,7 @@ for(i in 2:ITER_NUM) {
     
 
     new_V_i <- sample_V(data, cur_mu, v, cur_sigma_sq, N)
-    
+    print(new_V_i) 
     # MH in Gibbs step    
     new_mu <- sample_mu(data, cur_V_i, cur_sigma_sq, v, cur_mu)
     
@@ -122,14 +123,33 @@ for(i in 2:ITER_NUM) {
     
 }
 
-print("Mean MU")
+print("MU")
 print(mean(mchain[,1]))
 
-print("Mean Sigma sq")
+
+
+print("Sigma sq")
 print(mean(mchain[,2]))
+
+print("Differennce in V_i")
+print(colMeans(V_i)-V)
+
 png("sigma_sq_acf.png")
 acf_sigma_sq <- acf(mchain[,2], plot=FALSE)
 plot(acf_sigma_sq, main="Sigma-Squared ACF")
 dev.off()
-print("Differennce in V_i")
-print(colMeans(V_i) - V)
+
+png("mu_acf.png")
+acf_mu <- acf(mchain[,1], plot=FALSE)
+plot(acf_mu, main="mu ACF")
+dev.off()
+
+png("mu_dist.png")
+dist_mu <- density(mchain[,1], plot=FALSE)
+plot(dist_mu, main="mu Density")
+dev.off()
+
+png("sigma_sq_dist.png")
+dist_sigma_sq <- density(mchain[,2], plot=FALSE)
+plot(dist_sigma_sq, main="Sigma Sq Density")
+dev.off()
