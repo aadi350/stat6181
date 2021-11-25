@@ -36,11 +36,11 @@ sample_rw_mh <- function(x) {
 }
 
 # defining full conditionals  
-sample_V <- function(y, mu, v, sigma_sq, N) {
+sample_V <- function(Y, mu, v, sigma_sq, N) {
     
     return(rinvchisq(N, 
               v+1, 
-              sqrt(((y-mu)^2 + sigma_sq*v)/(v+1))))
+              sqrt(((Y-mu)^2 + sigma_sq*v)/(v+1))))
 }
 
 sample_sigma_sq <- function(v, n, V_i) {
@@ -97,7 +97,7 @@ mchain[1, 2] <- 20
 
 
 V_i <- matrix(NA, ITER_NUM, N)
-V_i[1,] <- rep(1, N) 
+V_i[1,] <- rnorm(N, mu, 1) 
 
 v <- 30
 
@@ -127,6 +127,9 @@ print(mean(mchain[,1]))
 
 print("Mean Sigma sq")
 print(mean(mchain[,2]))
-
+png("sigma_sq_acf.png")
+acf_sigma_sq <- acf(mchain[,2], plot=FALSE)
+plot(acf_sigma_sq, main="Sigma-Squared ACF")
+dev.off()
 print("Differennce in V_i")
 print(colMeans(V_i) - V)
