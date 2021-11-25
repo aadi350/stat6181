@@ -6,6 +6,7 @@ sigma_sq <- 15
 mu <- 35
 
 # install.packages("extraDistr") to attain rinvchisq
+# install.packages("extraDistr")
 library(extraDistr)
 
 set.seed(117)
@@ -20,11 +21,9 @@ Y <- rnorm(N, mu, sqrt(V))
 sample_indep_mh <- function(rg, dg, df, cur) {
     u <- runif(1)
 
-    proposed <- rg()+cur 
+    proposed <- rg()
     ratio <- (df(proposed)*dg(cur)/df(cur)*dg(proposed))
-    
     accept = u < ratio
-
     
     if(accept) {
         return(proposed)
@@ -66,16 +65,16 @@ sample_mu <- function(Y, V_i, sigma_sq, v, mu) {
 
     # proposal random distribution 
     rg <- function() {
-        rnorm(1,0, 10)
+        rnorm(1,mu, 1)
     }
 
     #  
-    dg <- function(x) {
+    df <- function(x) {
         exp(-0.5 * sum((Y-x)^2/V_i))
     }
     
-    df <- function(x) {
-        dnorm(x, 0, 10)
+    dg <- function(x) {
+        dnorm(x, mu, 1)
 
     }
     
@@ -87,14 +86,14 @@ sample_mu <- function(Y, V_i, sigma_sq, v, mu) {
 }
 
 # Gibbs Sampling
-ITER_NUM <- 500
+ITER_NUM <- 100
 data <- Y
 
 mchain <- matrix(NA,ITER_NUM, 2)
 # set starting values
 # column1=mean, column2=sigma_sq
-mchain[1, 1] <- 25
-mchain[1, 2] <- 10
+mchain[1, 1] <- 30 
+mchain[1, 2] <- 20
 
 
 V_i <- matrix(NA, ITER_NUM, N)
